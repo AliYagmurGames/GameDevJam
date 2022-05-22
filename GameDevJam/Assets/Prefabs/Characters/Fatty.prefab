@@ -82,6 +82,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   animator: {fileID: 6429240109508747788}
   playerUnit: 0
+  unitType: 3
   movementSpeed: 5
   detectRange: 10
   attackDelay: 2
@@ -94,9 +95,15 @@ MonoBehaviour:
   playerLayer:
     serializedVersion: 2
     m_Bits: 2048
+  breakWall:
+    serializedVersion: 2
+    m_Bits: 16384
   damage: 40
-  power: 50
+  power: 40
   health: 150
+  stamina: 0
+  maxStamina: 50
+  startingHealth: 0
 --- !u!136 &6429240108411102454
 CapsuleCollider:
   m_ObjectHideFlags: 0

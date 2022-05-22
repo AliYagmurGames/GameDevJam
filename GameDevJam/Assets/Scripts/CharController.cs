@@ -10,7 +10,9 @@ public class CharController : MonoBehaviour
     public Animator animator;
     Camera mainCam;
     GameObject playerTracker;
+    PlayerTracker _thePlayerTracker;
     public bool playerUnit = false;
+    public int unitType;
     string currentAnim = "idle";
     [SerializeField] float movementSpeed = 5;
     [SerializeField] float detectRange;
@@ -24,12 +26,20 @@ public class CharController : MonoBehaviour
     [SerializeField] float hitRange;
     public LayerMask enemyLayer;
     public LayerMask playerLayer;
+    public LayerMask breakWall;
     [SerializeField] float damage;
     [SerializeField] float power;
-    [SerializeField] float health;
-    float startingHealth;
+    public float health;
+    public int stamina;
+    public int maxStamina;
+    public float startingHealth;
     float turnSmoothVelocity;
     Vector3 startPosition;
+
+    bool shouldAttack;
+    bool isAggresive = false;
+
+
 
     private NavMeshAgent selfAgent;
 
@@ -37,9 +47,11 @@ public class CharController : MonoBehaviour
     {
         startPosition = transform.position;
         playerTracker = GameObject.Find("/PlayerTracker");
+        _thePlayerTracker = playerTracker.GetComponent<PlayerTracker>();
         mainCam = Camera.main;
         selfAgent = this.GetComponent<NavMeshAgent>();
         startingHealth = health;
+        stamina = maxStamina;
     }
     void Start()
     {
@@ -47,6 +59,7 @@ public class CharController : MonoBehaviour
         {
             StartCoroutine(forAIMovement());
         }
+        StartCoroutine(raiseStamina());
     }
 
     IEnumerator forAIMovement()
@@ -75,7 +88,19 @@ public class CharController : MonoBehaviour
     {
         if(dead == false)
         {
-            if((playerTracker.transform.position - this.transform.position).magnitude <= detectRange)
+            shouldAttack = true;
+            if (unitType == _thePlayerTracker.playerChar.unitType)
+            {
+                if(isAggresive)
+                {
+                    shouldAttack = true;
+                }
+                else
+                {
+                    shouldAttack = false;
+                }
+            }
+            if ((playerTracker.transform.position - this.transform.position).magnitude <= detectRange && shouldAttack == true)
             {
                 if((playerTracker.transform.position - this.transform.position).magnitude >= hitRange)
                 {
@@ -108,7 +133,6 @@ public class CharController : MonoBehaviour
                 
             }
         }
-        //AI = wait till the player is in range, than attack. Return to the starting position if player is not in range.
     }
 
 
@@ -123,23 +147,25 @@ public class CharController : MonoBehaviour
 
     public void attack()
     {
-        waitForAttack = true;
-        StartCoroutine(delayAttack());
-        setAnimation("ToAttack");
-        //check for enemies and deal damage
-
-        int layerMask = 1 << 10;
-
-        Ray ray = mainCam.ScreenPointToRay(Input.mousePosition);
-        Physics.Raycast(ray);
-        RaycastHit hit;
-        if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))
+        if(waitForAttack == false && stamina >= 20)
         {
-            Vector3 attackDirection = hit.point - this.transform.position;
-            attackDirection.y = 0;
-            this.transform.forward = attackDirection;
+            waitForAttack = true;
+            StartCoroutine(delayAttack());
+            setAnimation("ToAttack");
+
+            int layerMask = 1 << 10;
+
+            Ray ray = mainCam.ScreenPointToRay(Input.mousePosition);
+            Physics.Raycast(ray);
+            RaycastHit hit;
+            if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))
+            {
+                Vector3 attackDirection = hit.point - this.transform.position;
+                attackDirection.y = 0;
+                this.transform.forward = attackDirection;
+            }
+            StartCoroutine(attackWithTiming());
         }
-        StartCoroutine(attackWithTiming());
     }
 
     void aiAttack()
@@ -152,6 +178,19 @@ public class CharController : MonoBehaviour
         StartCoroutine(waitForNextAttack());
     }
 
+    IEnumerator raiseStamina()
+    {
+        while (true)
+        {
+            if (stamina < maxStamina)
+            {
+                stamina += 1;
+            }
+            yield return new WaitForSeconds(0.15f);
+        }
+
+    }
+
     IEnumerator waitForNextAttack()
     {
         waitForNextAttackBool = true;
@@ -162,6 +201,7 @@ public class CharController : MonoBehaviour
     IEnumerator delayAttack()
     {
         waitForAttack = true;
+        stamina = stamina - 20;
         yield return new WaitForSeconds(attackDelay);
         waitForAttack = false;
     }
@@ -178,16 +218,28 @@ public class CharController : MonoBehaviour
         {
             hitEnemies = Physics.OverlapSphere(attackPoint.position, attackRange, playerLayer);
         }
+        Collider[] breakableWall;
+        breakableWall = Physics.OverlapSphere(attackPoint.position, attackRange, breakWall);
 
-        if(dead == false)
+        if(breakableWall.Length > 0 && power >=40)
+        {
+            Debug.Log("wall broken");
+            breakableWall[0].gameObject.GetComponent<wallBreak>().breakWall();
+        }
+
+        if (dead == false)
         {
             foreach (Collider enemy in hitEnemies)
             {
-                enemy.gameObject.GetComponent<CharController>().receiveDamage(this.gameObject, damage);
+                CharController enemyController = enemy.gameObject.GetComponent<CharController>();
+                if(unitType == enemyController.unitType)
+                {
+                    enemyController.isAggresive = true;
+                }
+                enemyController.receiveDamage(this.gameObject, damage);
                 enemy.attachedRigidbody.AddForce((enemy.transform.position - this.transform.position) * power, ForceMode.Impulse);
             }
         }
-
     }
 
     public void move(float mX, float mZ)
@@ -241,8 +293,6 @@ public class CharController : MonoBehaviour
         this.GetComponent<CapsuleCollider>().isTrigger = false;
         this.gameObject.layer = 12;
         startAIMovement();
-
-
-
     }
+
 }
