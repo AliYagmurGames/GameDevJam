@@ -81,7 +81,8 @@ public class CharController : MonoBehaviour
                 {
                     if(waitForAttack == false)
                     {
-                        selfAgent.destination = playerTracker.transform.position;
+                        Vector3 agentDestination = playerTracker.transform.position;
+                        selfAgent.destination = agentDestination;
                         setAnimation("ToRun");
                         if (selfAgent.desiredVelocity.magnitude != 0)
                         {
@@ -178,11 +179,15 @@ public class CharController : MonoBehaviour
             hitEnemies = Physics.OverlapSphere(attackPoint.position, attackRange, playerLayer);
         }
 
-        foreach(Collider enemy in hitEnemies)
+        if(dead == false)
         {
-            enemy.gameObject.GetComponent<CharController>().receiveDamage(this.gameObject, damage);
-            enemy.attachedRigidbody.AddForce((enemy.transform.position - this.transform.position) * power, ForceMode.Impulse);
+            foreach (Collider enemy in hitEnemies)
+            {
+                enemy.gameObject.GetComponent<CharController>().receiveDamage(this.gameObject, damage);
+                enemy.attachedRigidbody.AddForce((enemy.transform.position - this.transform.position) * power, ForceMode.Impulse);
+            }
         }
+
     }
 
     public void move(float mX, float mZ)

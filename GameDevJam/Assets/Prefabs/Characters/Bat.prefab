@@ -10,9 +10,9 @@ GameObject:
   m_Component:
   - component: {fileID: 8968332901690001704}
   - component: {fileID: 8968332901690001707}
-  - component: {fileID: 8968332901690001709}
   - component: {fileID: 8968332901690001706}
   - component: {fileID: 3530641469088473440}
+  - component: {fileID: 5640723013978151553}
   m_Layer: 12
   m_Name: Bat
   m_TagString: Untagged
@@ -28,7 +28,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8968332901690001705}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -12.28, y: 3.3, z: 8.52}
+  m_LocalPosition: {x: -12.28, y: 0, z: 8.52}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -66,19 +66,6 @@ MonoBehaviour:
   damage: 15
   power: 5
   health: 50
---- !u!65 &8968332901690001709
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8968332901690001705}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 2.5, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &8968332901690001706
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -117,6 +104,20 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
+--- !u!136 &5640723013978151553
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8968332901690001705}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  m_Radius: 0.5
+  m_Height: 1
+  m_Direction: 1
+  m_Center: {x: 0, y: 3.3, z: 0}
 --- !u!1 &8968332903283475781
 GameObject:
   m_ObjectHideFlags: 0
@@ -141,7 +142,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8968332903283475781}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.61, z: 1.18}
+  m_LocalPosition: {x: 0, y: 2.7, z: 1.18}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -177,7 +178,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 820cc1c8fb8a0614ea6f77ce0f124b46, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 3.3
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 820cc1c8fb8a0614ea6f77ce0f124b46, type: 3}
       propertyPath: m_LocalPosition.z
