@@ -1,49 +1,110 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class CharController : MonoBehaviour
 {
     // This script is shared between all the characters, if the character is controlled by the player, it uses the inputs trough playerTracjer script.
 
     public Animator animator;
-    [SerializeField] Camera mainCam;
-    [SerializeField] GameObject playerTracker;
+    Camera mainCam;
+    GameObject playerTracker;
     public bool playerUnit = false;
     string currentAnim = "idle";
     [SerializeField] float movementSpeed = 5;
     [SerializeField] float detectRange;
     [SerializeField] float attackDelay = 2;
     bool waitForAttack = false;
+    bool waitForNextAttackBool = false;
     bool dead = false;
+    bool notCharControled = true;
     [SerializeField] Transform attackPoint;
     [SerializeField] float attackRange;
+    [SerializeField] float hitRange;
     public LayerMask enemyLayer;
     public LayerMask playerLayer;
     [SerializeField] float damage;
     [SerializeField] float power;
     [SerializeField] float health;
+    float startingHealth;
+    float turnSmoothVelocity;
     Vector3 startPosition;
+
+    private NavMeshAgent selfAgent;
 
     void Awake()
     {
         startPosition = transform.position;
+        playerTracker = GameObject.Find("/PlayerTracker");
+        mainCam = Camera.main;
+        selfAgent = this.GetComponent<NavMeshAgent>();
+        startingHealth = health;
     }
-    void Update()
+    void Start()
     {
         if (playerUnit == false)
         {
-            aiMovement();
+            StartCoroutine(forAIMovement());
         }
+    }
+
+    IEnumerator forAIMovement()
+    {
+        while(notCharControled)
+        {
+            aiMovement();
+            yield return new WaitForSeconds(0.2f);
+        }
+    }
+
+    void startAIMovement()
+    {
+        notCharControled = true;
+        selfAgent.enabled = true;
+        StartCoroutine(forAIMovement());
+    }
+
+    public void stopAIMovement()
+    {
+        notCharControled = false;
+        selfAgent.enabled = false;
     }
 
     void aiMovement()
     {
         if(dead == false)
         {
-            if((playerTracker.transform.position - startPosition).magnitude <= detectRange)
+            if((playerTracker.transform.position - this.transform.position).magnitude <= detectRange)
             {
-                //move towards player and attack
+                if((playerTracker.transform.position - this.transform.position).magnitude >= hitRange)
+                {
+                    if(waitForAttack == false)
+                    {
+                        selfAgent.destination = playerTracker.transform.position;
+                        setAnimation("ToRun");
+                        if (selfAgent.desiredVelocity.magnitude != 0)
+                        {
+                            transform.forward = selfAgent.desiredVelocity.normalized;
+                        }
+                    }
+                }
+                else
+                {
+                    selfAgent.destination = transform.position;
+                    if (waitForAttack == false)
+                    {
+                        if (waitForNextAttackBool == false)
+                        {
+                            aiAttack();
+                        }
+                        else
+                        {
+                            setAnimation("ToIdle");
+                        }
+                    }
+                }
+                
             }
         }
         //AI = wait till the player is in range, than attack. Return to the starting position if player is not in range.
@@ -61,6 +122,7 @@ public class CharController : MonoBehaviour
 
     public void attack()
     {
+        waitForAttack = true;
         StartCoroutine(delayAttack());
         setAnimation("ToAttack");
         //check for enemies and deal damage
@@ -77,6 +139,23 @@ public class CharController : MonoBehaviour
             this.transform.forward = attackDirection;
         }
         StartCoroutine(attackWithTiming());
+    }
+
+    void aiAttack()
+    {
+        waitForAttack = true;
+        waitForNextAttackBool = true;
+        StartCoroutine(delayAttack());
+        setAnimation("ToAttack");
+        StartCoroutine(attackWithTiming());
+        StartCoroutine(waitForNextAttack());
+    }
+
+    IEnumerator waitForNextAttack()
+    {
+        waitForNextAttackBool = true;
+        yield return new WaitForSeconds(4);
+        waitForNextAttackBool = false;
     }
 
     IEnumerator delayAttack()
@@ -117,7 +196,10 @@ public class CharController : MonoBehaviour
             }
             else
             {
-                transform.forward = new Vector3(mX, 0, mZ).normalized;
+                Vector3 direction = new Vector3(mX, 0, mZ).normalized;
+                float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
+                float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, 0.1f);
+                transform.rotation = Quaternion.Euler(0f, angle, 0f);
                 setAnimation("ToRun");
             }
         }
@@ -130,9 +212,15 @@ public class CharController : MonoBehaviour
             health = health - dmg;
             if (health <= 0)
             {
+                if(playerUnit == true)
+                {
+                    playerTracker.GetComponent<PlayerTracker>().dead = true;
+                }
                 setAnimation("ToDie");
                 this.gameObject.layer = 13;
                 dead = true;
+                playerTracker.GetComponent<PlayerTracker>().transferSoul(hiter);
+                this.GetComponent<CapsuleCollider>().isTrigger = true;
                 StartCoroutine(reviveWithTime());
             }
         }
@@ -142,8 +230,14 @@ public class CharController : MonoBehaviour
     {
         yield return new WaitForSeconds(5);
         setAnimation("ToRevive");
-        yield return new WaitForSeconds(2);
+        yield return new WaitForSeconds(4);
         dead = false;
+        health = startingHealth;
+        this.GetComponent<CapsuleCollider>().isTrigger = false;
         this.gameObject.layer = 12;
+        startAIMovement();
+
+
+
     }
 }

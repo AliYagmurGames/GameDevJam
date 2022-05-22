@@ -12,12 +12,13 @@ GameObject:
   - component: {fileID: 810327988498876344}
   - component: {fileID: 3231942183264760690}
   - component: {fileID: 5104659252309200063}
+  - component: {fileID: 8946294327363176918}
   m_Layer: 0
   m_Name: torture_device_001
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &4364276756891781149
 Transform:
@@ -97,3 +98,19 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 5.0450425, y: 0.98241395, z: 4.5028973}
   m_Center: {x: 0.12977958, y: 0.49120697, z: 0.19589901}
+--- !u!208 &8946294327363176918
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4024764765878817447}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 1
+  m_Extents: {x: 3.0700002, y: 2.374, z: 2.9670002}
+  m_MoveThreshold: 0.1
+  m_Carve: 0
+  m_CarveOnlyStationary: 1
+  m_Center: {x: -0.418, y: 2.374, z: -0.52000004}
+  m_TimeToStationary: 0.5
