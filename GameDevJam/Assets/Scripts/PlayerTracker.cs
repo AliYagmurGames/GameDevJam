@@ -14,6 +14,8 @@ public class PlayerTracker : MonoBehaviour
     float startingX;
     float startingZ;
 
+    public bool KeyCollected = false;
+
     private void Awake()
     {
         startingX = transform.position.x;
@@ -78,6 +80,11 @@ public class PlayerTracker : MonoBehaviour
             playerOnMap.anchoredPosition = new Vector2(147.28f - (differenceX * -0.87f), -120.79f - (differenceZ * -0.87f));
             yield return new WaitForSeconds(0.2f);
         }
+    }
+
+    public void collectKey()
+    {
+        KeyCollected = true;
     }
 
     

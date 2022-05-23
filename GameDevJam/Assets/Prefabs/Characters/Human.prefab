@@ -98,6 +98,9 @@ MonoBehaviour:
   breakWall:
     serializedVersion: 2
     m_Bits: 16384
+  charLayers:
+    serializedVersion: 2
+    m_Bits: 6144
   damage: 30
   power: 20
   health: 100

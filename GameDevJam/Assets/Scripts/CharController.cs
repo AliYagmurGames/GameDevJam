@@ -27,14 +27,21 @@ public class CharController : MonoBehaviour
     public LayerMask enemyLayer;
     public LayerMask playerLayer;
     public LayerMask breakWall;
+    public LayerMask charLayers;
     [SerializeField] float damage;
     [SerializeField] float power;
     public float health;
-    public int stamina;
+    [HideInInspector] public int stamina;
     public int maxStamina;
-    public float startingHealth;
+    [HideInInspector] public float startingHealth;
     float turnSmoothVelocity;
     Vector3 startPosition;
+    float chase = 4;
+
+    List<CharController> friendlyEnemies;
+    List<CharController> hostileEnemies;
+    CharController[] enemyListTwo;
+    CharController closestEnemy;
 
     bool shouldAttack;
     bool isAggresive = false;
@@ -52,6 +59,7 @@ public class CharController : MonoBehaviour
         selfAgent = this.GetComponent<NavMeshAgent>();
         startingHealth = health;
         stamina = maxStamina;
+        
     }
     void Start()
     {
@@ -59,14 +67,19 @@ public class CharController : MonoBehaviour
         {
             StartCoroutine(forAIMovement());
         }
+        
         StartCoroutine(raiseStamina());
+
+        
     }
+
 
     IEnumerator forAIMovement()
     {
         while(notCharControled)
         {
             aiMovement();
+            chase -= 0.2f;
             yield return new WaitForSeconds(0.2f);
         }
     }
@@ -88,8 +101,9 @@ public class CharController : MonoBehaviour
     {
         if(dead == false)
         {
+
             shouldAttack = true;
-            if (unitType == _thePlayerTracker.playerChar.unitType)
+            if(_thePlayerTracker.playerChar.unitType == unitType)
             {
                 if(isAggresive)
                 {
@@ -99,16 +113,21 @@ public class CharController : MonoBehaviour
                 {
                     shouldAttack = false;
                 }
+
             }
-            if ((playerTracker.transform.position - this.transform.position).magnitude <= detectRange && shouldAttack == true)
+
+            if ((playerTracker.transform.position - this.transform.position).magnitude <= detectRange && shouldAttack)
             {
                 if((playerTracker.transform.position - this.transform.position).magnitude >= hitRange)
                 {
                     if(waitForAttack == false)
                     {
+                        chase = 4;
                         Vector3 agentDestination = playerTracker.transform.position;
+
                         selfAgent.destination = agentDestination;
                         setAnimation("ToRun");
+                        selfAgent.isStopped = false;
                         if (selfAgent.desiredVelocity.magnitude != 0)
                         {
                             transform.forward = selfAgent.desiredVelocity.normalized;
@@ -122,15 +141,38 @@ public class CharController : MonoBehaviour
                     {
                         if (waitForNextAttackBool == false)
                         {
+                            Vector3 lookDirection = playerTracker.transform.position - transform.position;
+                            lookDirection.y = transform.position.y;
+                            transform.forward = lookDirection;
                             aiAttack();
                         }
                         else
                         {
                             setAnimation("ToIdle");
+                            selfAgent.isStopped = true;
                         }
                     }
                 }
                 
+            }
+            else
+            {
+                if(chase > 0)
+                {
+                    setAnimation("ToIdle");
+                    selfAgent.isStopped = true;
+                }
+                else if ((transform.position - startPosition).magnitude > 0.5)
+                {
+                    selfAgent.destination = startPosition;
+                    setAnimation("ToRun");
+                    selfAgent.isStopped = false;
+                }
+                else
+                {
+                    setAnimation("ToIdle");
+                    selfAgent.isStopped = true;
+                }
             }
         }
     }
@@ -232,9 +274,9 @@ public class CharController : MonoBehaviour
             foreach (Collider enemy in hitEnemies)
             {
                 CharController enemyController = enemy.gameObject.GetComponent<CharController>();
-                if(unitType == enemyController.unitType)
+                if(enemyController.unitType == unitType && playerUnit == true)
                 {
-                    enemyController.isAggresive = true;
+                    enemyController.setAggresive();
                 }
                 enemyController.receiveDamage(this.gameObject, damage);
                 enemy.attachedRigidbody.AddForce((enemy.transform.position - this.transform.position) * power, ForceMode.Impulse);
@@ -276,7 +318,11 @@ public class CharController : MonoBehaviour
                 setAnimation("ToDie");
                 this.gameObject.layer = 13;
                 dead = true;
-                playerTracker.GetComponent<PlayerTracker>().transferSoul(hiter);
+                if(playerUnit == true)
+                {
+                    playerTracker.GetComponent<PlayerTracker>().transferSoul(hiter);
+                }
+                
                 this.GetComponent<CapsuleCollider>().isTrigger = true;
                 StartCoroutine(reviveWithTime());
             }
@@ -293,6 +339,11 @@ public class CharController : MonoBehaviour
         this.GetComponent<CapsuleCollider>().isTrigger = false;
         this.gameObject.layer = 12;
         startAIMovement();
+    }
+
+    public void setAggresive()
+    {
+        isAggresive = true;
     }
 
 }
