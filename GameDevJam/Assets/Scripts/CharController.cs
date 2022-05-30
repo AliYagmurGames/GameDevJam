@@ -38,10 +38,11 @@ public class CharController : MonoBehaviour
     Vector3 startPosition;
     float chase = 4;
 
-    List<CharController> friendlyEnemies;
-    List<CharController> hostileEnemies;
-    CharController[] enemyListTwo;
-    CharController closestEnemy;
+    public AudioSource _hit;
+    public AudioSource _notice;
+    public AudioSource _die;
+
+    bool noticed = false;
 
     bool shouldAttack;
     bool isAggresive = false;
@@ -118,12 +119,20 @@ public class CharController : MonoBehaviour
 
             if ((playerTracker.transform.position - this.transform.position).magnitude <= detectRange && shouldAttack)
             {
+                if(noticed == false)
+                {
+                    _notice.Play();
+                    noticed = true;
+                }
+                
                 if((playerTracker.transform.position - this.transform.position).magnitude >= hitRange)
                 {
                     if(waitForAttack == false)
                     {
                         chase = 4;
                         Vector3 agentDestination = playerTracker.transform.position;
+                        
+                        
 
                         selfAgent.destination = agentDestination;
                         setAnimation("ToRun");
@@ -137,6 +146,7 @@ public class CharController : MonoBehaviour
                 else
                 {
                     selfAgent.destination = transform.position;
+                    
                     if (waitForAttack == false)
                     {
                         if (waitForNextAttackBool == false)
@@ -161,16 +171,20 @@ public class CharController : MonoBehaviour
                 {
                     setAnimation("ToIdle");
                     selfAgent.isStopped = true;
+                    
                 }
                 else if ((transform.position - startPosition).magnitude > 0.5)
                 {
                     selfAgent.destination = startPosition;
+                    noticed = false;
                     setAnimation("ToRun");
+                    
                     selfAgent.isStopped = false;
                 }
                 else
                 {
                     setAnimation("ToIdle");
+                    
                     selfAgent.isStopped = true;
                 }
             }
@@ -251,6 +265,7 @@ public class CharController : MonoBehaviour
     IEnumerator attackWithTiming()
     {
         yield return new WaitForSeconds(attackDelay/2);
+        _hit.Play();
         Collider[] hitEnemies;
         if (playerUnit == true)
         {
@@ -267,6 +282,10 @@ public class CharController : MonoBehaviour
         {
             Debug.Log("wall broken");
             breakableWall[0].gameObject.GetComponent<wallBreak>().breakWall();
+        }
+        else if (breakableWall.Length > 0 && power < 40 && playerUnit == true)
+        {
+            _thePlayerTracker.startSpeaking("I need something stronger for that.", 4f);
         }
 
         if (dead == false)
@@ -316,6 +335,7 @@ public class CharController : MonoBehaviour
                     playerTracker.GetComponent<PlayerTracker>().dead = true;
                 }
                 setAnimation("ToDie");
+                _die.Play();
                 this.gameObject.layer = 13;
                 dead = true;
                 if(playerUnit == true)

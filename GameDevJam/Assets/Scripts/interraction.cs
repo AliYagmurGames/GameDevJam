@@ -4,10 +4,13 @@ using UnityEngine;
 public class interraction : MonoBehaviour
 {
     public GameObject textPlace;
+    public PlayerTracker thePlayerTracker;
     [SerializeField] UnityEvent OnInterraction;
     bool interract = false;
     bool interracted = false;
     public bool shouldShow = true;
+    public string text;
+    public bool withText = false;
     private void OnTriggerEnter(Collider other)
     {
         if(other.gameObject.name == "PlayerTracker")
@@ -41,6 +44,13 @@ public class interraction : MonoBehaviour
                 interracted = true;
                 interract = false;
                 textPlace.SetActive(false);
+            }
+        }
+        else if (withText == true && interract == true)
+        {
+            if(Input.GetKeyDown(KeyCode.E))
+            {
+                thePlayerTracker.startSpeaking(text, 4f);
             }
         }
     }

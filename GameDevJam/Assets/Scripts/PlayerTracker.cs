@@ -6,7 +6,9 @@ using UnityEngine.UI;
 public class PlayerTracker : MonoBehaviour
 {
     public CharController playerChar;
+    public TheEnd _theEnd;
     public Camera _camera;
+    public GameObject speech;
     [SerializeField] float movementSpeed;
     public bool dead = false;
     public RectTransform playerOnMap;
@@ -77,7 +79,7 @@ public class PlayerTracker : MonoBehaviour
         else
         {
             //GameOver
-            Debug.Log("GameOver");
+            _theEnd.toTheEnd(true);
         }
     }
 
@@ -106,9 +108,16 @@ public class PlayerTracker : MonoBehaviour
 
     public void StartGame()
     {
-        dead = false;
         cameraStartPos = _camera.transform;
         StartCoroutine(cameraReset());
+        playerChar.animator.SetTrigger("InitialRevive");
+        StartCoroutine(initialRise());
+    }
+
+    IEnumerator initialRise()
+    {
+        yield return new WaitForSeconds(2);
+        dead = false;
     }
 
     IEnumerator isCameraMove()
@@ -125,6 +134,11 @@ public class PlayerTracker : MonoBehaviour
             _camera.transform.rotation = Quaternion.Lerp(cameraStartPos.rotation, cameraAimedPos.rotation, Time.deltaTime * 2);
             yield return new WaitForFixedUpdate();
         }
+    }
+
+    public void startSpeaking(string text, float time)
+    {
+        speech.GetComponent<Speach>().StartSpeaking(text, time);
     }
     
 }
