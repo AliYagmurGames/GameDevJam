@@ -1,2 +1,6 @@
-# GameDevJam
-My first game jam... Hopefully, there will be a game here at the end of may.
+# GameDevJam - Mind Shifter
+My first game jam... 
+
+The main idea: You control the npc that kills you. Nothing stays dead for long.
+
+For those who want to learn from my source code, just don't... It is a mess, I don't think it would be any help, honestly. For those who are going to evaluate my code, this game is created in a very very short period of time and I am not really good at clean code right now. I will get better, hopefully... 
