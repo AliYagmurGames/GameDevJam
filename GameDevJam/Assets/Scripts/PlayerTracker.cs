@@ -6,13 +6,18 @@ using UnityEngine.UI;
 public class PlayerTracker : MonoBehaviour
 {
     public CharController playerChar;
+    public Camera _camera;
     [SerializeField] float movementSpeed;
     public bool dead = false;
     public RectTransform playerOnMap;
     public Slider staminaBar;
     public Slider healthBar;
+    public Slider sanityBar;
     float startingX;
     float startingZ;
+    Transform cameraStartPos;
+    public Transform cameraAimedPos;
+    bool cameraMovTimer = true;
 
     public bool KeyCollected = false;
 
@@ -26,6 +31,7 @@ public class PlayerTracker : MonoBehaviour
 
     private void Start()
     {
+        dead = true;
         StartCoroutine(mapTracker());
     }
 
@@ -44,10 +50,7 @@ public class PlayerTracker : MonoBehaviour
             playerChar.move(moveX, moveZ);
             staminaBar.value = playerChar.stamina;
             healthBar.value = playerChar.health;
-
-
         }
-        
     }
 
     private void LateUpdate()
@@ -59,14 +62,23 @@ public class PlayerTracker : MonoBehaviour
 
     public void transferSoul(GameObject newBody)
     {
-        playerChar.playerUnit = false;
-        playerChar = newBody.GetComponent<CharController>();
-        playerChar.playerUnit = true;
-        staminaBar.maxValue = playerChar.maxStamina;
-        healthBar.maxValue = playerChar.startingHealth;
-        playerChar.stopAIMovement();
-        newBody.layer = 11;
-        dead = false;
+        if(sanityBar.value > 0)
+        {
+            sanityBar.value -= 1;
+            playerChar.playerUnit = false;
+            playerChar = newBody.GetComponent<CharController>();
+            playerChar.playerUnit = true;
+            staminaBar.maxValue = playerChar.maxStamina;
+            healthBar.maxValue = playerChar.startingHealth;
+            playerChar.stopAIMovement();
+            newBody.layer = 11;
+            dead = false;
+        }
+        else
+        {
+            //GameOver
+            Debug.Log("GameOver");
+        }
     }
 
 
@@ -87,5 +99,32 @@ public class PlayerTracker : MonoBehaviour
         KeyCollected = true;
     }
 
+    public void raiseSanity()
+    {
+        sanityBar.value += 1;
+    }
+
+    public void StartGame()
+    {
+        dead = false;
+        cameraStartPos = _camera.transform;
+        StartCoroutine(cameraReset());
+    }
+
+    IEnumerator isCameraMove()
+    {
+        yield return new WaitForSeconds(5);
+        cameraMovTimer = false;
+    }
+
+    IEnumerator cameraReset()
+    {
+        while(cameraMovTimer == true)
+        {
+            _camera.transform.position = Vector3.Lerp(_camera.transform.position, cameraAimedPos.position, Time.deltaTime * 2);
+            _camera.transform.rotation = Quaternion.Lerp(cameraStartPos.rotation, cameraAimedPos.rotation, Time.deltaTime * 2);
+            yield return new WaitForFixedUpdate();
+        }
+    }
     
 }
